@@ -1,0 +1,97 @@
+{
+  "fixture_typical_library": {
+    "description": "Biblioteca típica con 8 estanterías y 245 libros asignados",
+    "shelves": [
+      {
+        "codigo": "A-1",
+        "nombre": "Ficción",
+        "total_libros": 32,
+        "capacidad": 50,
+        "esperado_porcentaje": 64
+      },
+      {
+        "codigo": "A-2",
+        "nombre": "Referencia",
+        "total_libros": 28,
+        "capacidad": 50,
+        "esperado_porcentaje": 56
+      },
+      {
+        "codigo": "B-1",
+        "nombre": "Infantil",
+        "total_libros": 45,
+        "capacidad": 50,
+        "esperado_porcentaje": 90
+      },
+      {
+        "codigo": "B-2",
+        "nombre": "Reservados",
+        "total_libros": 0,
+        "capacidad": 50,
+        "esperado_porcentaje": 0
+      },
+      {
+        "codigo": "C-1",
+        "nombre": "Técnicos",
+        "total_libros": 50,
+        "capacidad": 50,
+        "esperado_porcentaje": 100
+      },
+      {
+        "codigo": "C-2",
+        "nombre": "Ciencias",
+        "total_libros": 22,
+        "capacidad": 50,
+        "esperado_porcentaje": 44
+      },
+      {
+        "codigo": "D-1",
+        "nombre": "Historia",
+        "total_libros": 38,
+        "capacidad": 50,
+        "esperado_porcentaje": 76
+      },
+      {
+        "codigo": "D-2",
+        "nombre": "Poesía",
+        "total_libros": 15,
+        "capacidad": 50,
+        "esperado_porcentaje": 30
+      }
+    ],
+    "libros_sin_asignar": 12,
+    "total_libros_sistema": 257,
+    "total_asignados_esperado": 245
+  },
+  "fixture_shelf_at_limit": {
+    "description": "Una estantería llena al 100% (50/50)",
+    "shelf": {
+      "codigo": "Z-1",
+      "nombre": "Test Límite",
+      "total_libros": 50,
+      "capacidad": 50
+    },
+    "estado": "LLENA",
+    "siguiente_intento": "DEBE_FALLAR"
+  },
+  "fixture_empty_shelf": {
+    "description": "Estantería vacía (0/50)",
+    "shelf": {
+      "codigo": "EMPTY-1",
+      "nombre": "Nueva Estantería",
+      "total_libros": 0,
+      "capacidad": 50
+    },
+    "estado": "VACÍA",
+    "capacidad_disponible": 50
+  },
+  "fixture_mixed_states": {
+    "description": "Mezcla de estados: vacía, parcial, llena",
+    "shelves": [
+      {"codigo": "M-1", "nombre": "Vacía", "total_libros": 0, "capacidad": 50},
+      {"codigo": "M-2", "nombre": "Parcial", "total_libros": 25, "capacidad": 50},
+      {"codigo": "M-3", "nombre": "Llena", "total_libros": 50, "capacidad": 50}
+    ],
+    "invariant_check": "suma_total debe ser 75"
+  }
+}
