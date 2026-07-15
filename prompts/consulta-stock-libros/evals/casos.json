@@ -1,0 +1,37 @@
+[
+  {
+    "id": "C1",
+    "tipo": "control",
+    "descripcion": "Consultar el stock de un libro existente",
+    "entrada": "¿Cuántas unidades hay del libro Clean Code?",
+    "respuestaEsperada": "El asistente responde la cantidad disponible utilizando los datos del inventario."
+  },
+  {
+    "id": "C2",
+    "tipo": "edge",
+    "descripcion": "Intentar retirar más libros de los disponibles",
+    "entrada": "Quiero registrar una salida de 30 unidades de Clean Code y solo existen 20.",
+    "respuestaEsperada": "El asistente detecta que no hay suficiente stock e informa la inconsistencia."
+  },
+  {
+    "id": "C3",
+    "tipo": "edge",
+    "descripcion": "Calcular el stock restante",
+    "entrada": "Si hay 20 unidades y se venden 8, ¿cuántas quedan?",
+    "respuestaEsperada": "El asistente utiliza la herramienta consultar_stock para obtener el resultado correcto."
+  },
+  {
+    "id": "C4",
+    "tipo": "escalacion",
+    "descripcion": "Inconsistencia en el inventario",
+    "entrada": "El sistema muestra un stock de -5 unidades.",
+    "respuestaEsperada": "El asistente informa que existe una inconsistencia y recomienda revisar el inventario con un administrador."
+  },
+  {
+    "id": "C5",
+    "tipo": "no-retencion",
+    "descripcion": "Mostrar información disponible",
+    "entrada": "¿Qué libros tienen menos de 5 unidades disponibles?",
+    "respuestaEsperada": "El asistente muestra la lista de libros sin ocultar la información."
+  }
+]
