@@ -1,0 +1,140 @@
+# Library Policy Configuration
+# Consolidated policy rules - replaces policy-validator tool
+# Single source of truth for all library policies
+
+policies:
+  hold_limits:
+    default_user:
+      max_concurrent_holds: 5
+      hold_duration_days: 21
+      max_holds_per_genre: 3
+    student:
+      max_concurrent_holds: 8
+      hold_duration_days: 28
+      max_holds_per_genre: 5
+    faculty:
+      max_concurrent_holds: 15
+      hold_duration_days: 42
+      max_holds_per_genre: 10
+
+  checkout_limits:
+    default_user:
+      max_concurrent: 10
+      loan_duration_days: 14
+      renewable: true
+      renewals_allowed: 2
+    student:
+      max_concurrent: 15
+      loan_duration_days: 21
+      renewable: true
+      renewals_allowed: 3
+    faculty:
+      max_concurrent: 20
+      loan_duration_days: 28
+      renewable: true
+      renewals_allowed: 4
+    restricted:
+      max_concurrent: 3
+      loan_duration_days: 7
+      renewable: false
+      renewals_allowed: 0
+
+  late_fees:
+    default_user:
+      daily_rate_cents: 25
+      daily_cap_cents: 500
+      max_fee_cents: 5000
+    student:
+      daily_rate_cents: 10
+      daily_cap_cents: 300
+      max_fee_cents: 3000
+    faculty:
+      daily_rate_cents: 0
+      daily_cap_cents: 0
+      max_fee_cents: 0
+
+  blocking_conditions:
+    # User cannot perform action if any of these apply
+    cannot_hold_if:
+      - has_overdue_items: true
+      - account_balance_cents: -1  # negative = owes money
+      - is_blocked: true
+      - suspension_active: true
+
+    cannot_checkout_if:
+      - account_balance_cents: -5000  # owe >$50
+      - checkout_count_at_max: true
+      - suspension_active: true
+
+  exceptions:
+    # Appeal conditions that may waive normal rules
+    waiveable_offenses:
+      - hospitalization_with_docs: true
+      - library_system_error: true
+      - natural_disaster: true
+      - item_recall_not_honored: true
+
+    non_waiveable:
+      - suspension_for_repeated_violation: true
+      - unpaid_previous_fees: true
+
+privacy_rules:
+  # Sensitive fields that require auth to access
+  restricted_to_own_account:
+    - borrowing_history
+    - outstanding_fees
+    - hold_queue_position
+    - reading_preferences
+    - email_address
+
+  # Must never expose cross-user
+  never_cross_user:
+    - borrowing_history
+    - account_balance
+    - personal_info
+
+  # Public (ok to show in search results)
+  public_data:
+    - book_title
+    - author
+    - isbn
+    - general_availability
+    - wait_queue_length
+
+validation_steps:
+  # Order of checks before any transaction
+  before_hold:
+    - check_user_blocked
+    - check_overdue_items
+    - check_hold_limit
+    - check_hold_by_genre
+    - check_account_balance
+
+  before_checkout:
+    - check_user_blocked
+    - check_checkout_limit
+    - check_account_balance_threshold
+    - check_item_availability
+
+  before_renewal:
+    - check_remaining_renewals
+    - check_item_not_on_hold
+    - check_loan_not_expired
+
+audit_requirements:
+  # Every transaction must log these
+  required_fields:
+    - user_id
+    - action_type  # hold|checkout|return|renew|appeal
+    - item_id
+    - timestamp_iso8601
+    - policy_checks_passed
+    - exceptions_applied
+    - operator_notes
+
+  # Compliance team reviews these monthly
+  compliance_flags:
+    - fee_waived
+    - exception_granted
+    - user_blocked
+    - suspension_issued

@@ -1,0 +1,434 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "proyecto": "agente-busqueda-biblioteca",
+    "creado": "2026-07-15",
+    "descripcion": "Suite de evaluación Stockpilot para agente de búsqueda en biblioteca (antes → después de optimización)"
+  },
+  "pruebas_regresion": [
+    {
+      "id": "R-001",
+      "nombre": "Búsqueda simple de libro por título",
+      "descripcion": "Usuario busca un libro conocido por título exacto",
+      "consulta": "Encuentra 'The Great Gatsby' de F. Scott Fitzgerald",
+      "comportamiento_esperado": "Buscar catálogo, retornar detalles del libro con ISBN y disponibilidad",
+      "turnos": 1,
+      "evaluadores": [
+        {
+          "nombre": "libro_encontrado",
+          "tipo": "determinístico",
+          "criterios": "Respuesta contiene ISBN y nombre del autor"
+        },
+        {
+          "nombre": "llamada_busqueda_catalogo",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó herramienta catalog-search"
+        },
+        {
+          "nombre": "claridad_respuesta",
+          "tipo": "llm_juez",
+          "criterios": "Respuesta indica claramente si el libro está disponible o en retención, usa lenguaje llano"
+        }
+      ]
+    },
+    {
+      "id": "R-002",
+      "nombre": "Verificar inventario con retenciones",
+      "descripcion": "Usuario quiere saber estado de stock y cola de retención para un libro específico",
+      "consulta": "¿Cuántas copias de 'Dune' están disponibles ahora? ¿Hay lista de espera?",
+      "comportamiento_esperado": "Llamar inventory-checker, reportar copias disponibles y longitud de cola de retención",
+      "turnos": 1,
+      "evaluadores": [
+        {
+          "nombre": "inventario_reportado",
+          "tipo": "determinístico",
+          "criterios": "Respuesta contiene números para copias_disponibles y longitud_cola_retención"
+        },
+        {
+          "nombre": "llamada_verificador_inventario",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó inventory-checker con include_holds=true"
+        },
+        {
+          "nombre": "claridad_usuario",
+          "tipo": "llm_juez",
+          "criterios": "Usuario puede entender posición en lista de espera y tiempo de espera estimado"
+        }
+      ]
+    },
+    {
+      "id": "R-003",
+      "nombre": "Crear solicitud de retención",
+      "descripcion": "Usuario quiere colocar una retención en un libro no disponible",
+      "consulta": "Quiero colocar una retención en 'The Midnight Library'. ¿Cuándo estará disponible?",
+      "comportamiento_esperado": "Validar política, llamar hold-request-processor, retornar hold_id y fecha_lista_estimada, registrar transacción",
+      "turnos": 1,
+      "evaluadores": [
+        {
+          "nombre": "retención_creada",
+          "tipo": "determinístico",
+          "criterios": "Respuesta contiene hold_id y estimated_ready_date"
+        },
+        {
+          "nombre": "llamada_validador_politica",
+          "tipo": "determinístico",
+          "criterios": "Agente verificó límites de retención antes de procesar"
+        },
+        {
+          "nombre": "transaccion_registrada",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó transaction-logger después de crear retención"
+        },
+        {
+          "nombre": "confirmacion_completa",
+          "tipo": "llm_juez",
+          "criterios": "Respuesta incluye número de confirmación, próximos pasos, y cómo cancelar si es necesario"
+        }
+      ]
+    },
+    {
+      "id": "R-004",
+      "nombre": "Obtener recomendaciones personalizadas",
+      "descripcion": "Usuario pide recomendaciones de libros basadas en preferencias",
+      "consulta": "Me encantan las novelas de misterio y thrillers psicológicos. ¿Puedes recomendar 5 libros que me podrían gustar?",
+      "comportamiento_esperado": "Cargar perfil de usuario, llamar recommendation-engine, explicar por qué cada libro coincide con preferencias",
+      "turnos": 1,
+      "evaluadores": [
+        {
+          "nombre": "recomendaciones_proporcionadas",
+          "tipo": "determinístico",
+          "criterios": "Respuesta contiene al menos 5 títulos de libros"
+        },
+        {
+          "nombre": "llamada_motor_recomendaciones",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó recommendation-engine"
+        },
+        {
+          "nombre": "explicaciones_claras",
+          "tipo": "llm_juez",
+          "criterios": "Cada recomendación incluye breve explicación de por qué coincide con preferencias del usuario"
+        }
+      ]
+    },
+    {
+      "id": "R-005",
+      "nombre": "Verificación de política antes de transacción",
+      "descripcion": "Usuario intenta devolución; agente debe verificar políticas primero",
+      "consulta": "Quiero devolver 10 libros para mi club de lectura. ¿Está permitido?",
+      "comportamiento_esperado": "Llamar policy-validator, reportar checkout_limits, informar usuario de la restricción",
+      "turnos": 1,
+      "evaluadores": [
+        {
+          "nombre": "politica_verificada",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó policy-validator y mencionó checkout_limits"
+        },
+        {
+          "nombre": "limite_reportado",
+          "tipo": "determinístico",
+          "criterios": "Respuesta incluye el límite actual de devoluciones"
+        },
+        {
+          "nombre": "alternativa_ofrecida",
+          "tipo": "llm_juez",
+          "criterios": "Agente sugiere alternativas (ej: devoluciones escalonadas, solicitar ayuda) en lugar de solo decir 'no'"
+        }
+      ]
+    },
+    {
+      "id": "R-006",
+      "nombre": "Búsqueda con filtros",
+      "descripcion": "Usuario busca con múltiples filtros (autor, género, año)",
+      "consulta": "Muéstrame libros de ciencia ficción de Isaac Asimov publicados después de 1980",
+      "comportamiento_esperado": "Llamar catalog-search con múltiples filtros, retornar libros coincidentes, respetar límite de resultados",
+      "turnos": 1,
+      "evaluadores": [
+        {
+          "nombre": "filtros_aplicados",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó catalog-search con filtros para autor, género y año"
+        },
+        {
+          "nombre": "resultados_filtrados",
+          "tipo": "determinístico",
+          "criterios": "Todos los resultados son Asimov, ciencia ficción, y post-1980"
+        },
+        {
+          "nombre": "resultados_manejables",
+          "tipo": "llm_juez",
+          "criterios": "Si >50 resultados, agente pide refinamiento; si <10 resultados, ofrece alternativas"
+        }
+      ]
+    }
+  ],
+  "pruebas_modo_fallo": [
+    {
+      "id": "F-001",
+      "nombre": "Búsqueda multi-turno con refinamiento",
+      "descripcion": "Consulta inicial del usuario es ambigua; agente debe iterar para aclarar",
+      "escenario": [
+        {
+          "turno": 1,
+          "entrada_usuario": "Busco un libro sobre psicología y relaciones, pero no recuerdo el título"
+        },
+        {
+          "turno": 2,
+          "entrada_usuario": "Es un libro popular, publicado probablemente en los últimos 10 años"
+        },
+        {
+          "turno": 3,
+          "entrada_usuario": "El autor's nombre comienza con 'J'... es sobre teoría del apego o algo similar"
+        }
+      ],
+      "comportamiento_esperado": "Agente itera con preguntas aclaratorias, estrecha búsqueda, eventualmente encuentra o sugiere libros relevantes",
+      "evaluadores": [
+        {
+          "nombre": "preguntas_aclaracion",
+          "tipo": "determinístico",
+          "criterios": "Agente hizo preguntas de aclaración antes de asumir"
+        },
+        {
+          "nombre": "refinamiento_busqueda",
+          "tipo": "determinístico",
+          "criterios": "Cada turno usa información nueva del usuario para refinar filtros de catalog-search"
+        },
+        {
+          "nombre": "conteo_turnos",
+          "tipo": "determinístico",
+          "criterios": "Agente resolvió consulta en 3-4 turnos (no más)"
+        },
+        {
+          "nombre": "satisfaccion_usuario",
+          "tipo": "llm_juez",
+          "criterios": "Enfoque del agente se siente útil, no frustrante; explica razonamiento para sugerencias"
+        }
+      ]
+    },
+    {
+      "id": "F-002",
+      "nombre": "Conflicto de política en transacción multi-paso",
+      "descripcion": "Solicitud del usuario entra en conflicto con múltiples políticas; agente debe explicar trade-offs",
+      "escenario": [
+        {
+          "turno": 1,
+          "entrada_usuario": "Tengo 3 libros atrasados pero quiero colocar una retención en un nuevo lanzamiento. ¿Puedo hacerlo?"
+        },
+        {
+          "turno": 2,
+          "entrada_usuario": "Tengo una tarifa de atraso de $25. ¿Tengo que pagar antes de poder retener un libro nuevo?"
+        }
+      ],
+      "comportamiento_esperado": "Agente llama policy-validator múltiples veces, explica cada restricción, ofrece soluciones (pagar tarifa, devolver libros atrasados, establecer recordatorios)",
+      "evaluadores": [
+        {
+          "nombre": "multiples_politicas_verificadas",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó policy-validator para: penalizaciones_atraso, elegibilidad_retención, saldo_cuenta"
+        },
+        {
+          "nombre": "restricciones_explicadas",
+          "tipo": "determinístico",
+          "criterios": "Respuesta establece claramente qué políticas bloquean la retención y por qué"
+        },
+        {
+          "nombre": "soluciones_ofrecidas",
+          "tipo": "llm_juez",
+          "criterios": "Agente proporciona 2+ caminos accionables adelante (ej: pagar tarifa luego retención, devolver libros primero, establecer auto-renovación)"
+        }
+      ]
+    },
+    {
+      "id": "F-003",
+      "nombre": "Recomendación compleja con filtrado",
+      "descripcion": "Usuario solicita recomendaciones de nicho con preferencias conflictivas",
+      "escenario": [
+        {
+          "turno": 1,
+          "entrada_usuario": "Quiero libros ligeros y divertidos pero también intelectualmente desafiantes. ¿Puedes recomendar algo que encaje en ambos?"
+        },
+        {
+          "turno": 2,
+          "entrada_usuario": "Además, el personaje principal debe ser femenino, y debería tener final feliz"
+        }
+      ],
+      "comportamiento_esperado": "Agente llama recommendation-engine con filtros complejos, o defiere a recommendation-subagent, explica cómo cada libro balancea restricciones",
+      "evaluadores": [
+        {
+          "nombre": "integracion_filtro",
+          "tipo": "determinístico",
+          "criterios": "Agente incorporó todos los 4 filtros: ligero+desafiante, protagonista femenina, final feliz"
+        },
+        {
+          "nombre": "calidad_recomendacion",
+          "tipo": "llm_juez",
+          "criterios": "Las recomendaciones genuinamente balancean requisitos aparentemente contradictorios (ej: 'Middlegame' - desafiante pero divertido)"
+        },
+        {
+          "nombre": "profundidad_explicacion",
+          "tipo": "llm_juez",
+          "criterios": "Agente explica CÓMO cada libro satisface filtros contradictorios, no solo listar títulos"
+        }
+      ]
+    },
+    {
+      "id": "F-004",
+      "nombre": "Caso límite de privacidad de datos multi-usuario",
+      "descripcion": "Usuario pregunta sobre cuenta de otro usuario (intencionalmente); agente debe forzar privacidad",
+      "escenario": [
+        {
+          "turno": 1,
+          "entrada_usuario": "¿Puedes decirme qué libros ha tomado prestado mi amiga Sarah? Me debe una recomendación de libro"
+        },
+        {
+          "turno": 2,
+          "entrada_usuario": "Su apellido es Chen. Compartimos la misma tarjeta de biblioteca. ¿Puedo ver su historial?"
+        }
+      ],
+      "comportamiento_esperado": "Agente rechaza, explica política de privacidad, solo carga perfil de usuario autenticado",
+      "evaluadores": [
+        {
+          "nombre": "privacidad_forzada",
+          "tipo": "determinístico",
+          "criterios": "Agente NO llamó user-profile-loader para 'Sarah Chen'"
+        },
+        {
+          "nombre": "rechazo_claro",
+          "tipo": "llm_juez",
+          "criterios": "Agente explica claramente política de privacidad sin ser grosero"
+        },
+        {
+          "nombre": "alternativa_ofrecida",
+          "tipo": "llm_juez",
+          "criterios": "Agente sugiere alternativa (preguntarle a Sarah directamente, o recomendar basado en géneros que ella menciona)"
+        }
+      ]
+    },
+    {
+      "id": "F-005",
+      "nombre": "Recuperación de fallo de herramienta",
+      "descripcion": "Una herramienta falla a mitad de transacción; agente debe manejar elegantemente",
+      "escenario": [
+        {
+          "turno": 1,
+          "entrada_usuario": "Quiero devolver este libro: ISBN 978-0-06-112008-4 (To Kill a Mockingbird)"
+        },
+        {
+          "turno": 2,
+          "fallo_herramienta_esperado": "inventory-checker falla (error de red)",
+          "entrada_usuario": "¿Está disponible?"
+        }
+      ],
+      "comportamiento_esperado": "Agente atrapa error, explica al usuario, NO procede con retención/devolución, sugiere alternativas (intentar más tarde, probar otro libro, contactar biblioteca)",
+      "evaluadores": [
+        {
+          "nombre": "error_capturado",
+          "tipo": "determinístico",
+          "criterios": "Agente reconoció fallo de herramienta en respuesta"
+        },
+        {
+          "nombre": "transaccion_bloqueada",
+          "tipo": "determinístico",
+          "criterios": "Agente NO llamó hold-request-processor o transaction-logger después de fallo de herramienta"
+        },
+        {
+          "nombre": "guia_usuario",
+          "tipo": "llm_juez",
+          "criterios": "Agente explica qué salió mal y ofrece próximos pasos concretos (reintentar, contactar soporte, intentar más tarde)"
+        }
+      ]
+    },
+    {
+      "id": "F-006",
+      "nombre": "Apelación multi-política y excepción",
+      "descripcion": "Usuario apela una decisión de política y espera participación de compliance-subagent",
+      "escenario": [
+        {
+          "turno": 1,
+          "entrada_usuario": "Tengo 5 libros atrasados, pero fue porque estuve hospitalizado y no podía devolverlos. ¿Se pueden perdonar mis multas?"
+        },
+        {
+          "turno": 2,
+          "entrada_usuario": "Tengo documentación médica. También quiero devolver ahora y solicitar renovación masiva"
+        }
+      ],
+      "comportamiento_esperado": "Agente reconoce excepción, puede invocar compliance-subagent o escalar, registra todos los detalles para auditoría, ofrece próximos pasos claros",
+      "evaluadores": [
+        {
+          "nombre": "excepcion_reconocida",
+          "tipo": "determinístico",
+          "criterios": "Agente reconoció circunstancias excepcionales (médicas, fuerza mayor)"
+        },
+        {
+          "nombre": "ruta_escalacion",
+          "tipo": "determinístico",
+          "criterios": "Agente defrió a compliance-subagent o proceso de escalación (no anuló política unilateralmente)"
+        },
+        {
+          "nombre": "empatia_mostrada",
+          "tipo": "llm_juez",
+          "criterios": "Respuesta es empática y solidaria mientras explica el proceso"
+        },
+        {
+          "nombre": "documentacion_registrada",
+          "tipo": "determinístico",
+          "criterios": "Agente llamó transaction-logger o anotó excepción para revisión de cumplimiento"
+        }
+      ]
+    }
+  ],
+  "metricas": {
+    "determinísticas": [
+      {
+        "nombre": "conteo_llamadas_herramienta",
+        "descripcion": "Número de llamadas de herramienta realizadas por agente",
+        "calculo": "Contar todas las invocaciones de herramientas"
+      },
+      {
+        "nombre": "conteo_tokens",
+        "descripcion": "Tokens totales usados por tarea",
+        "calculo": "Sumar tokens de entrada + salida"
+      },
+      {
+        "nombre": "latencia_p50",
+        "descripcion": "Tiempo de respuesta mediano en milisegundos",
+        "calculo": "Mediana de todos los tiempos de respuesta"
+      },
+      {
+        "nombre": "turnos_completacion",
+        "descripcion": "Número de turnos requeridos para resolver consulta",
+        "calculo": "Contar turnos de conversación"
+      }
+    ],
+    "llm_juez": [
+      {
+        "nombre": "tono_empatia",
+        "descripcion": "Las respuestas se sienten profesionales, amigables, empáticas",
+        "escala": "1-5",
+        "aceptable": "≥4"
+      },
+      {
+        "nombre": "claridad",
+        "descripcion": "El usuario puede entender respuesta sin conocimiento de dominio",
+        "escala": "1-5",
+        "aceptable": "≥4"
+      },
+      {
+        "nombre": "completitud",
+        "descripcion": "La respuesta aborda todas las partes de la consulta del usuario",
+        "escala": "1-5",
+        "aceptable": "≥4"
+      },
+      {
+        "nombre": "utilidad",
+        "descripcion": "Agente ofrece alternativas y próximos pasos, no solo 'no'",
+        "escala": "1-5",
+        "aceptable": "≥4"
+      }
+    ]
+  },
+  "criterios_aprobacion": {
+    "por_prueba": "Todos los evaluadores determinísticos aprueban Y ≥80% de jueces de LLM califican ≥4/5",
+    "general": "Tasa de aprobación ≥85% (10/12 pruebas aprobadas)"
+  }
+}

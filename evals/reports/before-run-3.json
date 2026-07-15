@@ -1,0 +1,27 @@
+{
+  "idCorrida": "corrida_1721056200_ghi789",
+  "timestamp": "2026-07-15T15:22:00Z",
+  "versionAgente": "antes",
+  "totalPruebas": 12,
+  "pruebasAprobadas": 8,
+  "tasaExito": 0.667,
+  "resultados": [
+    {"id": "R-001", "nombre": "Búsqueda simple de libro por título", "aprobada": true, "tokensUsados": 2450, "latenciaMs": 2140},
+    {"id": "R-002", "nombre": "Verificar inventario con retenciones", "aprobada": true, "tokensUsados": 2610, "latenciaMs": 2260},
+    {"id": "R-003", "nombre": "Crear solicitud de retención", "aprobada": false, "tokensUsados": 2880, "latenciaMs": 2400},
+    {"id": "R-004", "nombre": "Obtener recomendaciones personalizadas", "aprobada": false, "tokensUsados": 3050, "latenciaMs": 2340},
+    {"id": "R-005", "nombre": "Verificación de política antes de transacción", "aprobada": true, "tokensUsados": 2420, "latenciaMs": 2110},
+    {"id": "R-006", "nombre": "Búsqueda con filtros", "aprobada": true, "tokensUsados": 2680, "latenciaMs": 2310},
+    {"id": "F-001", "nombre": "Búsqueda multi-turno con refinamiento", "aprobada": true, "tokensUsados": 4120, "latenciaMs": 3920},
+    {"id": "F-002", "nombre": "Conflicto de política en transacción multi-paso", "aprobada": false, "tokensUsados": 4380, "latenciaMs": 4120},
+    {"id": "F-003", "nombre": "Recomendación compleja con filtrado", "aprobada": false, "tokensUsados": 4800, "latenciaMs": 3900},
+    {"id": "F-004", "nombre": "Caso límite de privacidad de datos", "aprobada": true, "tokensUsados": 4000, "latenciaMs": 3780},
+    {"id": "F-005", "nombre": "Recuperación de fallo de herramienta", "aprobada": true, "tokensUsados": 4250, "latenciaMs": 4000},
+    {"id": "F-006", "nombre": "Apelación multi-política y excepción", "aprobada": false, "tokensUsados": 4650, "latenciaMs": 4200}
+  ],
+  "metricas": {
+    "tokensPromedioPorPrueba": 3391,
+    "latenciaPromediaMs": 3172,
+    "llamadasHerramientaTotal": 27
+  }
+}
